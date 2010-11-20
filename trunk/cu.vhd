@@ -16,3 +16,23 @@ Entity cu is
 		RegDstD : out std_logic;
 		);
 End cu;
+
+Architecture rtl of cu is
+
+Begin
+	
+	--Leitura assincrona
+	Process(clk, Op, Funct)
+	Begin
+		If(clk'EVENT AND clk = '1') Then
+			Case Funct is
+				When "100011" => --Load
+				When "101011" => --Store
+				When "001000" => --Addi
+				When "000010" => --j
+				When "000011" => --jal
+				When "000100" => --beq
+			end Case;
+		End If;
+	End Process;
+End rtl;
