@@ -25,14 +25,17 @@ component sum32
 	
 	
 	--Guarda o valor do PC atual + 4, do PC de Branch e do PC atual
-	signal PCPlus4F, PCBranchM, PC : std_logic_vector(X-1 downto 0);
+	signal PCPlus4F, PCPlus4D, PCBranchM, PC : std_logic_vector(X-1 downto 0);
 	--Signal auxiliar que contem o mesmo valor que a saida PCF
 	signal PCFaux : std_logic_vector(X-1 downto 0);
 	--Seletor do MUX do PC
 	signal PCsrcM : std_logic; 
+	--Guarda no Pipeline a Instrucao da InstructionMemory
+	signal InstrD : std_logic_vector(X-1 downto 0);
 	
 	
 Begin
+
 	PCPlus4Fsum: sum32 PORT MAP(a=>PCFaux,b=>'00000000000000000000000000000100',CarryIn=>'0',Result=>PCPlus4F);
 	
 	PCmux : Process (PCPlus4F, PCsrcM, PCBranchM)
@@ -54,5 +57,13 @@ Begin
 			PCFaux <= PC;
 		end if; 
 	end PCPipeline;
+	
+	InstructionMemoryPipeline: Process (clk)
+	begin
+		if clk 'EVENT AND clk = '1' then
+			InstrD <= Instruction;
+			PCPlus4D <= PCPlus4F;
+		end if; 
+	end InstructionMemoryPipeline;
 	
 End behaviour;
