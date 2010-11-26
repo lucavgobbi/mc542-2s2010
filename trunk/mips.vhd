@@ -1,5 +1,8 @@
+--#TODO: Implementar o comando de Jump usando Pipelines	
+
 LIBRARY ieee ;
 USE ieee.std_logic_1164.all;
+USE ieee.numeric_std.all;
 
 Entity mips is
 	generic(nbits : positive := 32);
@@ -32,6 +35,8 @@ component sum32
 	signal PCsrcM : std_logic; 
 	--Guarda no Pipeline a Instrucao da InstructionMemory
 	signal InstrD : std_logic_vector(X-1 downto 0);
+	--Guarda o endereço com Sign Extend
+	signal SignImmD : std_logic_vector(X-1 downto 0);
 	
 	
 Begin
@@ -65,5 +70,11 @@ Begin
 			PCPlus4D <= PCPlus4F;
 		end if; 
 	end InstructionMemoryPipeline;
+	
+	SignExtend : Process (InstrD)
+	begin
+		SignImmD(15 downto 0) <= InstrD(15 downto 0)
+		SignImmD(31 downto 15) <= (31 downto 15 => InstrD(15));
+	end SignExtend;
 	
 End behaviour;
