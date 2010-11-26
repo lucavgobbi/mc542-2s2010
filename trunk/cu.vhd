@@ -7,14 +7,14 @@ Entity cu is
 		funct : in std_logic_vector(nbits - 27 downto 0);
 		clk : in std_logic;
 		reset : in std_logic;
-		RegWrite : out std_logic;
-		RegDst : out std_logic;
-		AluSrc : out std_logic;
-		Branch : out std_logic;
-		MemWrite : out std_logic;
-		MemtoReg : out std_logic;
-		Jump: out std_logic;
-		ALUOp : out std_logic_vector(1 downto 0);
+		RegWriteD : out std_logic;
+		RegDstD : out std_logic;
+		AluSrcD : out std_logic;
+		BranchD : out std_logic;
+		MemWriteD : out std_logic;
+		MemtoRegD : out std_logic;
+		JumpD: out std_logic;
+		ALUControlD : out std_logic_vector(1 downto 0);
 		);
 End cu;
 
