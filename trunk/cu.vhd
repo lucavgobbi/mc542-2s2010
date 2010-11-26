@@ -4,7 +4,6 @@ USE ieee.std_logic_1164.all;
 Entity cu is
 	generic(nbits : positive := 32);
 	port(Op : in std_logic_vector(nbits -1 downto nbits -6);
-		funct : in std_logic_vector(nbits - 27 downto 0);
 		clk : in std_logic;
 		reset : in std_logic;
 		RegWriteD : out std_logic;
@@ -14,7 +13,7 @@ Entity cu is
 		MemWriteD : out std_logic;
 		MemtoRegD : out std_logic;
 		JumpD: out std_logic;
-		ALUControlD : out std_logic_vector(1 downto 0);
+		ALUOp : out std_logic_vector(1 downto 0);
 		);
 End cu;
 
