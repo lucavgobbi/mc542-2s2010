@@ -45,6 +45,8 @@ Begin
 				temp := sumresult;
 				Overflow <= AuxOverflow;
 				CarryOut <= AuxCarryOut;
+			When "011" =>
+				temp := SrcA xor SrcB;
 			When "100" =>
 				temp := SrcA and (not SrcB);
 			When "101" =>
