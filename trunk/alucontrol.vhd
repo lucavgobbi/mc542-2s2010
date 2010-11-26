@@ -18,16 +18,24 @@ Begin
 		Case AluOp is
 			When "00" => --Add
 				AluControlD <= "010";
-			When "01" =>
+			When "01" => --Sub
 				AluControlD <= "110";
 			When "10" =>
 				Case funct is
-					When 
-				
+					When "100000" => --Add
+						AluControlD <= "010";
+					When "100010" => --Sub
+						AluControlD <= "110";
+					When "100100" => --And
+						AluControlD <= "000";
+					When "100101" => --Or
+						AluControlD <= "001";
+					When "101010" => --Slt
+						AluControlD <= "111";
+					When "100110" => --Xor
+						AluControlD <= "011"
 				End Case
-			
 			When Others => null
 		End Case
 	End
-	
 End
