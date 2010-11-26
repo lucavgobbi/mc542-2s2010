@@ -7,7 +7,7 @@ Entity alucontrol is
 		funct : in std_logic_vector(nbits - 27 downto 0);
 		ALUControlD : out std_logic_vector(2 downto 0);
 		);
-End cu;
+End alucontrol;
 
 Architecture rtl of alucontrol is
 
@@ -33,9 +33,9 @@ Begin
 					When "101010" => --Slt
 						AluControlD <= "111";
 					When "100110" => --Xor
-						AluControlD <= "011"
-				End Case
-			When Others => null
-		End Case
-	End
-End
+						AluControlD <= "011";
+				End Case;
+			When Others => null;
+		End Case;
+	End;
+End rtl;
