@@ -38,12 +38,27 @@ component rf
 		RD2 : out std_logic_vector(W-1 downto 0));
 	end component;
 	
+component cu
+	Generic (W : natural := 32);
+	port(Op : in std_logic_vector(W -1 downto W -6);
+		RegWriteD : out std_logic;
+		RegDstD : out std_logic;
+		AluSrcD : out std_logic;
+		BranchD : out std_logic;
+		MemWriteD : out std_logic;
+		MemtoRegD : out std_logic;
+		JumpD: out std_logic;
+		ALUOp : out std_logic_vector(1 downto 0);
+		LinkD: out std_logic;
+		);
+	end component;
+	
 	--Guarda o valor do PC atual + 4, do PC de Branch e do PC atual
 	signal PCPlus4F, PCPlus4D, PCBranchM, PC : std_logic_vector(X-1 downto 0);
 	--Signal auxiliar que contem o mesmo valor que a saida PCF
 	signal PCFaux : std_logic_vector(X-1 downto 0);
 	--Seletor do MUX do PC
-	signal PCSrcM : std_logic; 
+	signal PCSrcD : std_logic; 
 	--Guarda no Pipeline a Instrucao da InstructionMemory
 	signal InstrD : std_logic_vector(X-1 downto 0);
 	--Guarda o endereço com Sign Extend
@@ -53,9 +68,25 @@ component rf
 	--Guarda o valor a ser escrito no rf
 	signal ResultW : std_logic_vector(X-1 downto 0);
 	--Guarda o enable de escrita do rf
-	signal RegWriteW : std_logic;
+	signal RegWriteD, RegWriteW : std_logic;
 	--Guarda as saidas de letura do rf
 	signal RD1, RD2 : std_logic_vector(X-1 downto 0);
+	--Guarda o sinal de selecao do mux seletor de registrador de destino do rf
+	signal RegDstD, RegDstE : std_logic;
+	--Guarda o sinal de selecao do mux seletor de entrada da alu
+	signal ALUSrcD, ALUSrcE : std_logic;
+	--Guarda o sinal que decide se ocorreu um Branch
+	signal BranchD : std_logic;
+	--Guarda o sinal de enable de write em memoria
+	signal MemWriteD : std_logic;
+	--Guarda o seletor do que vai ser escrito no rf
+	signal MemtoRegD, MemtoRegW : std_logic
+	--Guarda se o jump vai ser executado
+	signal JumpD : std_logic;
+	--Liga o CU com o ALUControl
+	signal AluOP : std_logic_vector (1 downto 0);
+	--Guarda se foi feito um Jump com link
+	signal LinkD : std_logic;
 	
 Begin
 
@@ -74,10 +105,22 @@ Begin
 				 We3	=> RegWriteW,
 				 RD1	=> RD1,
 				 RD2	=> RD2);
+				 
+	ControlUnit: cu
+		 PORT MAP(Op 		  => InstrD (31 downto 25),
+			      RegWriteD   => RegWriteD,
+				  RegDstD     => RegDstD,
+				  AluSrcD     => AluSrcD,
+				  BranchD     => BranchD,
+				  MemWriteD   => MemWriteD,
+				  MemtoRegD   => MemtoRegD,
+				  JumpD 	  => JumpD,
+				  ALUOp  	  => AluOp,
+				  LinkD		  => LinkD);
 	
-	PCmux : Process (PCPlus4F, PCsrcM, PCBranchM)
+	PCmux : Process (PCPlus4F, PCsrcD, PCBranchM)
 	begin
-		Case PCsrcM is
+		Case PCsrcD is
 			When '0' =>
 				PC <= PCPlus4F;
 			When '1' =>
@@ -108,5 +151,14 @@ Begin
 		SignImmD(15 downto 0) <= InstrD(15 downto 0)
 		SignImmD(31 downto 15) <= (31 downto 15 => InstrD(15));
 	end SignExtend;
+	
+	PCSrcDGenerator : Process (RD1,RD2,BranchD)
+	begin
+		if RD1 = RD2 then
+			PCSrcD <= BranchD;
+		else
+			PCSrcD <= '0'
+		end if;
+	end PCSrcDGenerator;
 	
 End behaviour;
