@@ -53,6 +53,16 @@ component cu
 		);
 	end component;
 	
+component alucontrol
+	Generic (W : natural := 32);
+	port(ALUOp : in std_logic_vector(1 downto 0);
+		funct : in std_logic_vector(nbits - 27 downto 0);
+		ALUControlD : out std_logic_vector(2 downto 0);
+		USignedD : out std_logic;
+		);
+	end component;
+	
+	
 	--Guarda o valor do PC atual + 4, do PC de Branch e do PC atual
 	signal PCPlus4F, PCPlus4D, PCBranchM, PC : std_logic_vector(X-1 downto 0);
 	--Signal auxiliar que contem o mesmo valor que a saida PCF
@@ -62,15 +72,15 @@ component cu
 	--Guarda no Pipeline a Instrucao da InstructionMemory
 	signal InstrD : std_logic_vector(X-1 downto 0);
 	--Guarda o endereço com Sign Extend
-	signal SignImmD : std_logic_vector(X-1 downto 0);
+	signal SignImmD, SignImmE : std_logic_vector(X-1 downto 0);
 	--Guarda o endereco do registrador a ser escrito no rf
 	signal WriteRegW : std_logic_vector (4 downto 0);
 	--Guarda o valor a ser escrito no rf
 	signal ResultW : std_logic_vector(X-1 downto 0);
 	--Guarda o enable de escrita do rf
-	signal RegWriteD, RegWriteW : std_logic;
+	signal RegWriteD, RegWriteE, RegWriteW : std_logic;
 	--Guarda as saidas de letura do rf
-	signal RD1, RD2 : std_logic_vector(X-1 downto 0);
+	signal RD1, RD2, RD1E, RD2E : std_logic_vector(X-1 downto 0);
 	--Guarda o sinal de selecao do mux seletor de registrador de destino do rf
 	signal RegDstD, RegDstE : std_logic;
 	--Guarda o sinal de selecao do mux seletor de entrada da alu
@@ -78,15 +88,21 @@ component cu
 	--Guarda o sinal que decide se ocorreu um Branch
 	signal BranchD : std_logic;
 	--Guarda o sinal de enable de write em memoria
-	signal MemWriteD : std_logic;
+	signal MemWriteD, MemWriteE : std_logic;
 	--Guarda o seletor do que vai ser escrito no rf
-	signal MemtoRegD, MemtoRegW : std_logic
+	signal MemtoRegD, MemtoRegW, MemtoRegE : std_logic
 	--Guarda se o jump vai ser executado
 	signal JumpD : std_logic;
 	--Liga o CU com o ALUControl
 	signal AluOP : std_logic_vector (1 downto 0);
 	--Guarda se foi feito um Jump com link
-	signal LinkD : std_logic;
+	signal LinkD, LinkE : std_logic;
+	--Guarda o sinal de controle da ALU
+	signal AluControlD, AluControlE : std_logic(2 downto 0);
+	--Guarda se a operação é com ou sem sinal
+	signal USignedD, USignedE : std_logic;
+	--Guarda o possivel endereco de destino de uma gravacao no rf
+	signal Rte, Rde : std_logic_vector (4 downto 0);
 	
 Begin
 
@@ -118,13 +134,19 @@ Begin
 				  ALUOp  	  => AluOp,
 				  LinkD		  => LinkD);
 	
-	PCmux : Process (PCPlus4F, PCsrcD, PCBranchM)
+	AluControlUnit : alucontrol
+		PORT MAP(ALUOp 		  => ALUOp,
+				 funct 		  => InstrD (5 downto 0),
+				 ALUControlD  => ALUControlD,
+				 USignedD 	  => USignedD);
+	
+	PCmux : Process (PCPlus4F, PCsrcD, PCBranchD)
 	begin
 		Case PCsrcD is
 			When '0' =>
 				PC <= PCPlus4F;
 			When '1' =>
-				PC <= PCBranchM;
+				PC <= PCBranchD;
 			When others =>
 				null;
 		end Case;
@@ -140,11 +162,30 @@ Begin
 	
 	InstructionMemoryPipeline: Process (clk)
 	begin
-		if clk 'EVENT AND clk = '1' then
+		if clk 'EVENT and clk = '1' then
 			InstrD <= Instruction;
 			PCPlus4D <= PCPlus4F;
 		end if; 
 	end InstructionMemoryPipeline;
+	
+	DataPipeline : Process (clk)
+	begin
+		if clk 'EVENT and clk = '1' then
+			Rte 		<= InstrD (20 downto 16);
+			Rde 		<= InstrD (15 downto 11);
+			SignImmE 	<= SignImmD;
+			RD1E 		<= RD1;
+			RD2E 		<= RD2;
+			RegWriteE	<= RegWriteD;
+			MemtoWriteE	<= MemtoWriteD;
+			MemWriteE	<= MemWriteD;
+			AluControlE	<= AluControlD;
+			AluSrcE		<= AluSrcD;
+			RegDstE		<= RegDstD;
+			LinkE		<= LinkD;
+			USignedE	<= USignedD;
+		end if;
+	end DataPipeline;
 	
 	SignExtend : Process (InstrD)
 	begin
@@ -160,5 +201,14 @@ Begin
 			PCSrcD <= '0'
 		end if;
 	end PCSrcDGenerator;
+	
+	PCBranchDGenerator : Process (InstrD, PCPlus4D)
+	variable temp : std_logic_vector(31 downto 0);
+	begin
+		temp (17 downto 2) := InstrD(15 downto 0);
+		temp (1 downto 0) := (1 downto 0 => '0');
+		temp (31 downto 17) := (31 downto 17 => Instrd(15));
+		PCBranchD <= std_logic_vector(signed(PCPlus4D) + signed(temp));
+	end PCBranchDGenerator;
 	
 End behaviour;
