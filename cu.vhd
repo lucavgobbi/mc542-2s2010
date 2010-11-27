@@ -12,6 +12,7 @@ Entity cu is
 		MemtoRegD : out std_logic;
 		JumpD: out std_logic;
 		ALUOp : out std_logic_vector(1 downto 0);
+		LinkD: out std_logic;
 		);
 End cu;
 
