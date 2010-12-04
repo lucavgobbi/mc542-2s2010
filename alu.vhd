@@ -7,6 +7,7 @@ Entity ALU is
 	Generic(W : natural := 32);	
 	port(SrcA, SrcB: in std_logic_vector(W-1 downto 0);
 		 AluControl : in std_logic_vector(2 downto 0);
+		 USignedD : in std_logic;
 		 AluResult : out std_logic_vector(W-1 downto 0);
 		 Overflow, Zero, CarryOut: out std_logic);		 
 End ALU;
@@ -16,6 +17,7 @@ component sum32
 	Generic (X : natural := 32);
 	port (a, b: in std_logic_vector(X-1 downto 0);
 		  CarryIn:in std_logic;
+		  USigned:in std_logic;
 		  Result: out std_logic_vector(X-1 downto 0);
 		  Overflow,CarryOut: out std_logic);
 	end component;
@@ -31,7 +33,7 @@ Begin
 		end if;
 	end process;
 	
-	soma: sum32 PORT MAP(SrcA,complementSrcB,'0',sumresult,AuxOverflow,AuxCarryOut);
+	soma: sum32 PORT MAP(SrcA,complementSrcB,'0',USignedD,sumresult,AuxOverflow,AuxCarryOut);
 	
 	Process(sumresult,SrcA,SrcB,AluControl)
 	variable temp: std_logic_vector(W-1 downto 0);
