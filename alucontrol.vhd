@@ -4,7 +4,7 @@ USE ieee.std_logic_1164.all;
 Entity alucontrol is
 	generic(nbits : positive := 32);
 	port(AluOp : in std_logic_vector(1 downto 0);
-		funct : in std_logic_vector(nbits - 27 downto 0);
+		funct : in std_logic_vector(5 downto 0);
 		ALUControlD : out std_logic_vector(2 downto 0);
 		USignedD : out std_logic
 		);
@@ -14,7 +14,7 @@ Architecture rtl of alucontrol is
 
 Begin
 	
-	Process(AluOp)
+	Process(AluOp, funct)
 	Begin
 		Case AluOp is
 			When "00" => --Add
@@ -50,6 +50,7 @@ Begin
 					When "100110" => --Xor
 						AluControlD <= "011";
 						USignedD <= '0';
+					When Others => null;
 				End Case;
 			When Others => null;
 		End Case;

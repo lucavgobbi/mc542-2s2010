@@ -3,7 +3,7 @@ USE ieee.std_logic_1164.all;
 
 Entity cu is
 	generic(nbits : positive := 32);
-	port(Op : in std_logic_vector(nbits -1 downto nbits -6);
+	port(Op : in std_logic_vector(31 downto 26);
 		RegWriteD : out std_logic;
 		RegDstD : out std_logic;
 		AluSrcD : out std_logic;
@@ -22,14 +22,14 @@ Begin
 	
 	Process(Op)
 	Begin
-		Case Funct is
+		Case Op is
 			When "100011" => --Load
 				RegWriteD <= '1';
 				RegDstD <= '0';
 				AluSrcD <= '1';
 				BranchD <= '0';
 				MemWriteD <= '0';
-				MentoRegD <= '1';
+				MemtoRegD <= '1';
 				ALUOp <= "00";
 				JumpD <= '0';
 				LinkD <= '0';
@@ -39,7 +39,7 @@ Begin
 				AluSrcD <= '1';
 				BranchD <= '0';
 				MemWriteD <= '1';
-				MentoRegD <= '0';
+				MemtoRegD <= '0';
 				ALUOp <= "00";
 				JumpD <= '0';
 				LinkD <= '0';
@@ -49,7 +49,7 @@ Begin
 				AluSrcD <= '1';
 				BranchD <= '0';
 				MemWriteD <= '0';
-				MentoRegD <= '0';
+				MemtoRegD <= '0';
 				ALUOp <= "00";
 				JumpD <= '0';
 				LinkD <= '0';
@@ -59,7 +59,7 @@ Begin
 				AluSrcD <= '0';
 				BranchD <= '0';
 				MemWriteD <= '0';
-				MentoRegD <= '0';
+				MemtoRegD <= '0';
 				ALUOp <= "00";
 				JumpD <= '1';
 				LinkD <= '0';
@@ -69,7 +69,7 @@ Begin
 				AluSrcD <= '0';
 				BranchD <= '0';
 				MemWriteD <= '0';
-				MentoRegD <= '0';
+				MemtoRegD <= '0';
 				ALUOp <= "00";
 				JumpD <= '1';
 				LinkD <= '1';
@@ -79,7 +79,7 @@ Begin
 				AluSrcD <= '0';
 				BranchD <= '1';
 				MemWriteD <= '0';
-				MentoRegD <= '0';
+				MemtoRegD <= '0';
 				ALUOp <= "01";
 				JumpD <= '0';
 				LinkD <= '0';
@@ -89,10 +89,11 @@ Begin
 				AluSrcD <= '0';
 				BranchD <= '0';
 				MemWriteD <= '0';
-				MentoRegD <= '0';
+				MemtoRegD <= '0';
 				ALUOp <= "10";
 				JumpD <= '0';		
 				LinkD <= '0';
+			When others => null;
 		end Case;
 	End Process;
 End rtl;
