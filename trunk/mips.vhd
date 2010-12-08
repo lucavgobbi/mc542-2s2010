@@ -49,8 +49,7 @@ component rf
 	end component;
 	
 component cu
-	Generic (W : natural := 32);
-	port(Op : in std_logic_vector(W -1 downto W -6);
+	port(Op : in std_logic_vector(31 downto 26);
 		RegWriteD : out std_logic;
 		RegDstD : out std_logic;
 		AluSrcD : out std_logic;
@@ -64,9 +63,9 @@ component cu
 	end component;
 	
 component alucontrol
-	Generic (W : natural := 32);
+
 	port(ALUOp : in std_logic_vector(1 downto 0);
-		funct : in std_logic_vector(nbits - 27 downto 0);
+		funct : in std_logic_vector(5 downto 0);
 		ALUControlD : out std_logic_vector(2 downto 0);
 		USignedD : out std_logic
 		);
@@ -141,7 +140,7 @@ Begin
 				 RD2	=> RD2);
 				 
 	ControlUnit: cu
-		 PORT MAP(Op 		  => InstrD (31 downto 25),
+		 PORT MAP(Op 		  => InstrD (31 downto 26),
 			      RegWriteD   => RegWriteD,
 				  RegDstD     => RegDstD,
 				  AluSrcD     => AluSrcD,
@@ -151,7 +150,8 @@ Begin
 				  JumpD 	  => JumpD,
 				  ALUOp  	  => AluOp,
 				  LinkD		  => LinkD);
-	
+
+
 	AluControlUnit : alucontrol
 		PORT MAP(ALUOp 		  => ALUOp,
 				 funct 		  => InstrD (5 downto 0),
