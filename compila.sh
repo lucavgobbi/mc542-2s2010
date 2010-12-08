@@ -1,6 +1,11 @@
+# AluCONTROL
+ghdl -a --ieee=synopsys -fexplicit alucontrol.vhd 
+
+# ControlUnit
+ghdl -a --ieee=synopsys -fexplicit cu.vhd 
+
 # RF
 ghdl -a --ieee=synopsys -fexplicit rf.vhd
-ghdl -e --ieee=synopsys -fexplicit rf
 
 # ALU
 ghdl -a --ieee=synopsys -fexplicit sum32.vhd
