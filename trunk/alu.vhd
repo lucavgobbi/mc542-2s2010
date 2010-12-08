@@ -58,10 +58,18 @@ Begin
 				Overflow <= AuxOverflow;
 				CarryOut <= AuxCarryOut;
 			When "111" => 
-				if (signed(SrcA) < signed(SrcB)) then 
-					temp := "11111111111111111111111111111111";
+				if (USignedD = '0') then
+					if (signed(SrcA) < signed(SrcB)) then 
+						temp := "11111111111111111111111111111111";
+					else
+						temp := "00000000000000000000000000000000";
+					end if;
 				else
-					temp := "00000000000000000000000000000000";
+					if (unsigned(SrcA) < unsigned(SrcB)) then 
+						temp := "11111111111111111111111111111111";
+					else
+						temp := "00000000000000000000000000000000";
+					end if;
 				end if;
 			When Others => null;
 		End Case;
