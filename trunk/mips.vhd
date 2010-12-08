@@ -22,8 +22,18 @@ component sum32
 	Generic (X : natural := 32);
 	port (a, b: in std_logic_vector(X-1 downto 0);
 		  CarryIn:in std_logic;
+		  USigned: in std_logic;
 		  Result: out std_logic_vector(X-1 downto 0);
 		  Overflow,CarryOut: out std_logic);
+	end component;
+	
+component alu
+	Generic(W : natural := 32);	
+	port(SrcA, SrcB: in std_logic_vector(W-1 downto 0);
+		 AluControl : in std_logic_vector(2 downto 0);
+		 USignedD : in std_logic;
+		 AluResult : out std_logic_vector(W-1 downto 0);
+		 Overflow, Zero, CarryOut: out std_logic);
 	end component;
 	
 component rf
@@ -64,7 +74,7 @@ component alucontrol
 	
 	
 	--Guarda o valor do PC atual + 4, do PC de Branch e do PC atual
-	signal PCPlus4F, PCPlus4D, PCBranchM, PC : std_logic_vector(X-1 downto 0);
+	signal PCPlus4F, PCPlus4D, PCBranchD, PC, PCJumpD, PCJumpE, PCJumpM, PCJumpW : std_logic_vector(X-1 downto 0);
 	--Signal auxiliar que contem o mesmo valor que a saida PCF
 	signal PCFaux : std_logic_vector(X-1 downto 0);
 	--Seletor do MUX do PC
@@ -74,13 +84,15 @@ component alucontrol
 	--Guarda o endereço com Sign Extend
 	signal SignImmD, SignImmE : std_logic_vector(X-1 downto 0);
 	--Guarda o endereco do registrador a ser escrito no rf
-	signal WriteRegW : std_logic_vector (4 downto 0);
+	signal WriteRegE, WriteRegM, WriteRegW : std_logic_vector (4 downto 0);
 	--Guarda o valor a ser escrito no rf
 	signal ResultW : std_logic_vector(X-1 downto 0);
 	--Guarda o enable de escrita do rf
-	signal RegWriteD, RegWriteE, RegWriteW : std_logic;
+	signal RegWriteD, RegWriteE, RegWriteM, RegWriteW, RegWriteWs : std_logic;
 	--Guarda as saidas de letura do rf
 	signal RD1, RD2, RD1E, RD2E : std_logic_vector(X-1 downto 0);
+	--Guarda os dados a serem escritos na memoria principal
+	signal WriteDataE, WriteDataMs : std_logic_vector(X-1 downto 0);
 	--Guarda o sinal de selecao do mux seletor de registrador de destino do rf
 	signal RegDstD, RegDstE : std_logic;
 	--Guarda o sinal de selecao do mux seletor de entrada da alu
@@ -88,24 +100,29 @@ component alucontrol
 	--Guarda o sinal que decide se ocorreu um Branch
 	signal BranchD : std_logic;
 	--Guarda o sinal de enable de write em memoria
-	signal MemWriteD, MemWriteE : std_logic;
+	signal MemWriteD, MemWriteE, MemWriteMs : std_logic;
 	--Guarda o seletor do que vai ser escrito no rf
-	signal MemtoRegD, MemtoRegW, MemtoRegE : std_logic
+	signal MemtoRegD, MemtoRegW, MemtoRegM, MemtoRegE : std_logic
 	--Guarda se o jump vai ser executado
-	signal JumpD : std_logic;
+	signal JumpD: std_logic;
 	--Liga o CU com o ALUControl
 	signal AluOP : std_logic_vector (1 downto 0);
 	--Guarda se foi feito um Jump com link
-	signal LinkD, LinkE : std_logic;
+	signal LinkD, LinkE, LinkM, LinkW : std_logic;
 	--Guarda o sinal de controle da ALU
 	signal AluControlD, AluControlE : std_logic(2 downto 0);
+	--Guarda o resultado da operacao na ALU
+	signal AluOutE, AluOutMs, AluOutW : std_logic_vector (X-1 downto 0);
 	--Guarda se a operação é com ou sem sinal
 	signal USignedD, USignedE : std_logic;
 	--Guarda o possivel endereco de destino de uma gravacao no rf
 	signal Rte, Rde : std_logic_vector (4 downto 0);
+	--Sinais de entrada da ALU
+	signal SrcA, SrcB : std_logic_vector (X-1 downto 0);
+	--Guarda o valor lido da memoria principal
+	signal ReadDataW : std_logic_vector (X-1 downto o );
 	
 Begin
-
 	PCPlus4Fsum: sum32
 		PORT MAP(a 		 => PCFaux,
 				 b  	 => '00000000000000000000000000000100',
@@ -140,16 +157,27 @@ Begin
 				 ALUControlD  => ALUControlD,
 				 USignedD 	  => USignedD);
 	
-	PCmux : Process (PCPlus4F, PCsrcD, PCBranchD)
+	AluE : alu
+		PORT MAP(SrcA		  => SrcA,
+				 SrcB 		  => SrcB,
+				 AluControl   => AluControlE,
+				 USignedD 	  => USignedE,
+				 AluResult 	  => AluOutE);
+	
+	PCmux : Process (PCPlus4F, PCsrcD, PCBranchD, JumpD)
 	begin
-		Case PCsrcD is
-			When '0' =>
-				PC <= PCPlus4F;
-			When '1' =>
-				PC <= PCBranchD;
-			When others =>
-				null;
-		end Case;
+		if JumpD = '0' then
+			Case PCsrcD is
+				When '0' =>
+					PC <= PCPlus4F;
+				When '1' =>
+					PC <= PCBranchD;
+				When others =>
+					null;
+			end Case;
+		else
+			PC <= PCJumpD;
+		end if;
 	end PCmux;
 	
 	PCPipeline : Process (clk)
@@ -160,7 +188,7 @@ Begin
 		end if; 
 	end PCPipeline;
 	
-	InstructionMemoryPipeline: Process (clk)
+	FetchPipeline: Process (clk)
 	begin
 		if clk 'EVENT and clk = '1' then
 			InstrD <= Instruction;
@@ -168,7 +196,7 @@ Begin
 		end if; 
 	end InstructionMemoryPipeline;
 	
-	DataPipeline : Process (clk)
+	DecodePipeline : Process (clk)
 	begin
 		if clk 'EVENT and clk = '1' then
 			Rte 		<= InstrD (20 downto 16);
@@ -184,8 +212,36 @@ Begin
 			RegDstE		<= RegDstD;
 			LinkE		<= LinkD;
 			USignedE	<= USignedD;
+			PCJumpE		<= PCJumpD;
 		end if;
-	end DataPipeline;
+	end DecodePipeline;
+	
+	ExecutePipeline : Process (clk)
+	begin
+		if clk 'EVENT and clk = '1' then
+			LinkM 		<= LinkE;
+			PCJumpM		<= PCJumpE;
+			WriteRegM	<= WriteRegE;
+			WriteDataMs	<= WriteDataE;
+			AluOutMs	<= AluOutE;
+			MemWriteMs	<= MemWriteE;
+			MemtoRegM	<= MemtoRegE;
+			RegWriteM	<= RegWriteE;
+		end if;
+	end ExecutePipeline;
+	
+	MemoryPipeline : Process (clk)
+	begin 
+		if clk 'EVENT and clk = '1' then
+			ReadDataW 	<= Data;
+			AluOutW 	<= AluOutMs;
+			WriteRegW	<= WriteRegM;
+			MemtoRegW	<= MemtoRegM;
+			RegWriteWs	<= RegWriteW;
+			LinkW		<= LinkM;
+			PCJumpW		<= PCJumpM;
+		end if;
+	end MemoryPipeline;
 	
 	SignExtend : Process (InstrD)
 	begin
@@ -211,4 +267,67 @@ Begin
 		PCBranchD <= std_logic_vector(signed(PCPlus4D) + signed(temp));
 	end PCBranchDGenerator;
 	
+	PCJumpDGenerator : Process (InstrD, PCPlus4D)
+	variable temp: std_logic_vector(31 downto 0);
+	begin
+		temp (31 downto 28) := PCPlus4D(31 downto 28);
+		temp (27 downto 2) := InstrD (25 downto 0);
+		temp (1 downto 0) := (1 downto 0 => '0');
+		PCJumpD <= temp;
+	end PCJumpDGenerator;
+	
+	WriteRegEMux : Process (RtE, Rde, RegDstE)
+	begin
+		if LinkE = '1' then
+			WriteRegE <= '1111';
+		else
+			Case RegDstE is
+				When '0' => 
+					WriteRegE <= RtE;
+				When '1' =>
+					WriteRegE <= RdE;
+				When others =>
+					null;
+			end Case;
+		end if;
+	end WriteRegEMux;
+	
+	WriteDataE <= RD2E;
+	SrcA <= RD1E;
+	
+	SrcBMux : Process (RD2E, SignImmE, AluSrcE)
+	begin
+		case AluSrcE is
+			When '0' =>
+				SrcB <= RD2E;
+			When '1' =>
+				SrcB <= SignImmE;
+			When others =>
+				null;
+		end Case;
+	end SrcBMux;
+	
+	RegWriteWGenerator : Process (RegWriteWs, LinkW)
+	begin
+		RegWriteW <= RegWriteWs or LinkW;
+	end RegWriteWGenerator;
+	
+	ResultWMux : Process (AluOutW, ReadDataW, LinkW, MemtoRegW, PCJumpW)
+	begin
+		if LinkW = '1' then
+			ResultW <= PCJumpW;
+		else 
+			Case MemtoRegW is
+				When '1' =>
+					ResultW <= ReadDataW
+				When '0' =>
+					ResultW <= AluOutW;
+				When others =>
+					null;
+		end if;
+	end ResultWMux;
+	
+	AluOutM <= AluOutMs;
+	WriteDataM <= WriteDataMs;
+	MemWriteM <= MemWriteMs;
 End behaviour;
