@@ -12,7 +12,7 @@ Entity cu is
 		MemtoRegD : out std_logic;
 		JumpD: out std_logic;
 		ALUOp : out std_logic_vector(1 downto 0);
-		LinkD: out std_logic;
+		LinkD: out std_logic
 		);
 End cu;
 
@@ -32,7 +32,7 @@ Begin
 				MentoRegD <= '1';
 				ALUOp <= "00";
 				JumpD <= '0';
-				LinkD <= '0'
+				LinkD <= '0';
 			When "101011" => --Store
 				RegWriteD <= '0';
 				RegDstD <= '0';
@@ -42,7 +42,7 @@ Begin
 				MentoRegD <= '0';
 				ALUOp <= "00";
 				JumpD <= '0';
-				LinkD <= '0'
+				LinkD <= '0';
 			When "001000" => --Addi
 				RegWriteD <= '1';
 				RegDstD <= '0';
@@ -52,7 +52,7 @@ Begin
 				MentoRegD <= '0';
 				ALUOp <= "00";
 				JumpD <= '0';
-				LinkD <= '0'
+				LinkD <= '0';
 			When "000010" => --j
 				RegWriteD <= '0';
 				RegDstD <= '0';
@@ -62,7 +62,7 @@ Begin
 				MentoRegD <= '0';
 				ALUOp <= "00";
 				JumpD <= '1';
-				LinkD <= '0'
+				LinkD <= '0';
 			When "000011" => --jal
 				RegWriteD <= '1';
 				RegDstD <= '0';
@@ -72,7 +72,7 @@ Begin
 				MentoRegD <= '0';
 				ALUOp <= "00";
 				JumpD <= '1';
-				LinkD <= '1'
+				LinkD <= '1';
 			When "000100" => --beq
 				RegWriteD <= '0';
 				RegDstD <= '0';
@@ -82,7 +82,7 @@ Begin
 				MentoRegD <= '0';
 				ALUOp <= "01";
 				JumpD <= '0';
-				LinkD <= '0'
+				LinkD <= '0';
 			When "000000" => --R Type
 				RegWriteD <= '1';
 				RegDstD <= '1';
@@ -92,7 +92,7 @@ Begin
 				MentoRegD <= '0';
 				ALUOp <= "10";
 				JumpD <= '0';		
-				LinkD <= '0'
+				LinkD <= '0';
 		end Case;
 	End Process;
 End rtl;

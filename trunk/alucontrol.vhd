@@ -6,7 +6,7 @@ Entity alucontrol is
 	port(AluOp : in std_logic_vector(1 downto 0);
 		funct : in std_logic_vector(nbits - 27 downto 0);
 		ALUControlD : out std_logic_vector(2 downto 0);
-		USignedD : out std_logic;
+		USignedD : out std_logic
 		);
 End alucontrol;
 
@@ -53,5 +53,5 @@ Begin
 				End Case;
 			When Others => null;
 		End Case;
-	End;
+	End process;
 End rtl;
