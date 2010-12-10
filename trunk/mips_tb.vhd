@@ -5,11 +5,11 @@ use std.textio.all;
 
 
 
-entity tb_mips is
+entity mips_tb is
 	
-end tb_mips;
+end mips_tb;
 
-architecture behavior of tb_mips is
+architecture behavior of mips_tb is
 	constant clk_period : time := 100 ns;  -- Clock period
 	constant delta : time := clk_period / 10;  -- Delta time to assert the inputs
 	file InFile: text open read_mode is "mips.input";  -- Input file
@@ -28,7 +28,7 @@ architecture behavior of tb_mips is
 		clk : in std_logic;
 		reset : in std_logic;
 		PCF : out std_logic_vector(nbits -1 downto 0);
-		ALUOutM : out std_logic_vector(nbits -1 downto 0));
+		ALUOutM : out std_logic_vector(nbits -1 downto 0);
 		WriteDataM : out std_logic_vector(nbits -1 downto 0);
 		MemWriteM : out std_logic);
 	end component;
@@ -38,7 +38,7 @@ begin  -- behavior
 	iclk <= not iclk after clk_period / 2;
 	iresetn <= '0', '1' after 7 * clk_period;
 
-	alu0: alu
+	mips0: mips
 		port map (
 			Instruction		=> 	Instruction,
 			Data			=>	Data,
@@ -51,9 +51,9 @@ begin  -- behavior
 	
 	ReadInput : process(iClk, iResetn)
 		variable input_line			: line;
-		variable Instruction			: std_logic_vector(31 downto 0);
-		variable Data 		: std_logic_vector(31 downto 0);
-		variable reset	: std_logic;
+		variable Instruction_value	: std_logic_vector(31 downto 0);
+		variable Data_value 		: std_logic_vector(31 downto 0);
+		variable reset_value		: std_logic;
 	begin	-- process ReadInput
 		if (iResetn = '0') then
 			end_of_file <= false;
